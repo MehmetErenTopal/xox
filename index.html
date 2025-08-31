@@ -104,17 +104,20 @@
     <!-- Firebase SDK'sını yükleyin -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase yapılandırması ve uygulama kimliği, canvas tarafından otomatik olarak sağlanır.
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
-        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}');
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        // Projenizin Firebase yapılandırma bilgilerini buraya girin.
+        const firebaseConfig = {
+          apiKey: "AIzaSyB1A05vbj1pvWoVd8fEpvFgCMaB7V7sE6E",
+          authDomain: "xox-oyunu-6ee10.firebaseapp.com",
+          projectId: "xox-oyunu-6ee10",
+          storageBucket: "xox-oyunu-6ee10.firebasestorage.app",
+          messagingSenderId: "522319916509",
+          appId: "1:522319916509:web:844d13071f838532f11a34",
+        };
         
-        console.log("Uygulama Kimliği:", appId);
-        console.log("Firebase Yapılandırması:", firebaseConfig);
-        console.log("Başlangıç Yetkilendirme Tokeni:", initialAuthToken);
+        const appId = firebaseConfig.projectId;
 
         // UI elementlerini alın
         const createGameBtn = document.getElementById('createGameBtn');
@@ -178,14 +181,6 @@
 
         // Firebase başlatma ve kimlik doğrulama
         async function initializeFirebase() {
-            // Firebase yapılandırmasının var olup olmadığını kontrol edin
-            // eğer Firebase yapılandırması yoksa, bu platformda çalışamayacağı hatasını gösterin.
-            if (!firebaseConfig.apiKey) {
-                console.error("Hata: Firebase yapılandırması eksik.");
-                showModal("Yapılandırma Hatası", "Firebase yapılandırması eksik. Lütfen uygulamayı doğru ortamda çalıştırdığınızdan emin olun.");
-                hideLoading();
-                return;
-            }
             try {
                 showLoading("Firebase başlatılıyor...");
                 app = initializeApp(firebaseConfig);
@@ -199,23 +194,20 @@
                         lobby.classList.remove('hidden');
                         console.log("Oturum açıldı, Kullanıcı Kimliği:", userId);
                     } else {
-                        console.log("Oturum açma bekleniyor...");
-                        // Eğer token yoksa anonim olarak oturum açmayı dene
+                        // Eğer oturum açılmamışsa, anonim olarak oturum açmayı dene
                         try {
-                            if (initialAuthToken) {
-                                await signInWithCustomToken(auth, initialAuthToken);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
+                            await signInAnonymously(auth);
                         } catch (error) {
-                            showModal("Oturum Açma Hatası", "Oturum açılamadı. Lütfen tekrar deneyin.");
+                            showModal("Oturum Açma Hatası", "Oturum açılamadı. Firebase projenizde **Anonim Kimlik Doğrulama** etkinleştirilmiş mi lütfen kontrol edin.");
                             console.error("Oturum açma hatası:", error);
+                            hideLoading();
                         }
                     }
                 });
+
             } catch (error) {
                 console.error("Firebase başlatma hatası:", error);
-                showModal("Hata", "Firebase başlatılırken bir sorun oluştu.");
+                showModal("Hata", "Firebase başlatılırken bir sorun oluştu. Yapılandırma bilgilerinizi kontrol edin.");
                 hideLoading();
             }
         }
