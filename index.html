@@ -275,17 +275,29 @@
             }
 
             const gameRef = doc(db, `artifacts/${appId}/public/data/xox-games`, gameId);
-            const gameData = (await getDoc(gameRef)).data();
             
-            // Eğer oyun durumu uygun değilse veya sıra sizde değilse hamle yapma
+            // Hamle yapılmadan önce en güncel veriyi çek. Bu, yarış durumlarını azaltır.
+            showLoading("Hamle kontrol ediliyor...");
+            const docSnap = await getDoc(gameRef);
+
+            if (!docSnap.exists()) {
+                showModal("Hata", "Oyun bulunamadı veya silindi.");
+                hideLoading();
+                return;
+            }
+
+            const gameData = docSnap.data();
+
+            // Sadece sıra sizdeyse hamle yapılmasına izin ver.
+            // Bu, aynı anda hamle yapılmasını engelleyen ana güvenlik kontrolüdür.
             if (gameData.status !== 'oynuyor' || gameData.players[gameData.currentPlayer] !== userId) {
                  showModal("Hata", "Sıra sizde değil veya oyun aktif değil.");
+                 hideLoading();
                  return;
             }
 
             // Hamle geçerli mi kontrol et
             if (gameData.board[index] === null) {
-                showLoading("Hamle yapılıyor...");
                 const newBoard = [...gameData.board];
                 newBoard[index] = gameData.currentPlayer;
 
@@ -314,6 +326,7 @@
                 }
             } else {
                  showModal("Hata", "Bu hücre dolu.");
+                 hideLoading();
             }
         }
         
